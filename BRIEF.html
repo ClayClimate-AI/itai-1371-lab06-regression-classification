@@ -1,0 +1,431 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Lab 06 Brief</title><style>body{font-family:-apple-system,Segoe UI,sans-serif;max-width:860px;margin:2em auto;padding:0 1em;line-height:1.6;color:#222}h1{color:#1f3a5f}h2{border-bottom:2px solid #e3e8ef;padding-bottom:.2em;color:#1f3a5f;margin-top:2em}table{border-collapse:collapse;margin:1em 0}td,th{border:1px solid #ccd;padding:.4em .7em}th{background:#eef2f7}blockquote{background:#fff8e1;border-left:4px solid #f0b400;margin:1em 0;padding:.5em 1em}code{background:#f3f4f6;padding:.1em .3em;border-radius:3px}pre{background:#f6f8fa;padding:1em;overflow:auto}pre.mermaid{background:#fff}</style><script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true});</script></head><body><h1>Lab 06 Brief: Regression and Classification</h1>
+<p><strong>Course:</strong> ITAI 1371 &nbsp; <strong>Due:</strong> Wed Oct 14, 2026, 11:59 PM CT &nbsp; <strong>Points:</strong> 100</p>
+<p>This brief explains every idea in the Module 06 slides and the Lab 06 notebook. Each idea has three parts:</p>
+<ul>
+<li><strong>In plain words:</strong> the idea in everyday language.</li>
+<li><strong>In real terms:</strong> the technical version you would say in class or write in your notebook.</li>
+<li><strong>Tie to your midterm:</strong> how the same idea showed up in your stroke project.</li>
+</ul>
+<p>Nothing here answers the notebook for you. The knowledge checks, the code, and the journals are yours to write. Use this to understand, then close it and do the work.</p>
+<hr />
+<h2>The big picture</h2>
+<pre class="mermaid">flowchart TD
+    A[Labeled data: rows with the answer known] --> B{What kind of answer?}
+    B -->|A number on a scale| C[Regression]
+    B -->|A bucket or label| D[Classification]
+    C --> E[Linear Regression<br/>loss: MSE]
+    D --> F[Logistic Regression<br/>loss: Log Loss]
+    E --> G[Too many features or overfitting? Ridge / Lasso / Elastic Net]
+    E --> H[Data curves? Polynomial features]
+    F --> I[More than 2 classes? One vs Rest / Softmax]
+</pre>
+<p>In the lab you build one of each, on the Titanic dataset:</p>
+<table>
+<thead>
+<tr>
+<th>Task</th>
+<th>Type</th>
+<th>Predict</th>
+<th>Using</th>
+<th>Score with</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Task 1</td>
+<td>Regression</td>
+<td><code>Fare</code> (ticket price)</td>
+<td><code>Age</code>, <code>Pclass</code></td>
+<td>Mean Squared Error</td>
+</tr>
+<tr>
+<td>Task 2</td>
+<td>Classification</td>
+<td><code>Survived</code> (0 or 1)</td>
+<td><code>Age</code>, <code>Pclass</code>, <code>Sex</code></td>
+<td>Accuracy</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>1. Supervised learning</h2>
+<p><strong>In plain words:</strong> You learn from examples where the answer is already written down, like studying with an answer key. Later you guess the answer for new examples that have no key.</p>
+<p><strong>In real terms:</strong> Supervised learning trains a model on labeled data, meaning each row has input features (X) and a known target (y). The model learns a mapping from X to y and is then judged on rows it never saw.</p>
+<p><strong>Tie to your midterm:</strong> Your stroke dataset (5,110 rows) was labeled: every patient had a <code>stroke</code> value of 0 or 1. That column is the answer key, so the stroke data is a supervised learning problem.</p>
+<hr />
+<h2>2. Regression vs classification (the core difference)</h2>
+<p><strong>In plain words:</strong> Ask yourself one question about the answer column. Can you measure it with a ruler? That is regression. Can you sort it into separate buckets? That is classification.</p>
+<p><strong>In real terms:</strong> Regression predicts a continuous numeric target (price, temperature, minutes). Classification predicts a discrete class label (spam or not spam, survived or died, cat or dog or bird). The type of target decides the model, the loss, and the metric.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Regression</th>
+<th>Classification</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Question it answers</td>
+<td>How much? How many?</td>
+<td>Which one? Yes or no?</td>
+</tr>
+<tr>
+<td>Example output</td>
+<td>$45,000, 3.2 degrees, 23 minutes</td>
+<td>"Spam", "Cat", "High Risk"</td>
+</tr>
+<tr>
+<td>Lab example</td>
+<td>Titanic <code>Fare</code></td>
+<td>Titanic <code>Survived</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Tie to your midterm:</strong> <code>stroke</code> is 0 or 1, so predicting it is <strong>classification</strong>. Prof Rao's feedback made this point: stroke is the target for classification. If you predicted <code>avg_glucose_level</code> or <code>bmi</code> instead, that would be regression, because those are measured on a scale.</p>
+<blockquote>
+<p><strong>Guiding question:</strong> The Titanic dataset has <code>Survived</code> coded as 0 and 1. Those are numbers. Why is it still classification and not regression? (Hint: can a passenger be 0.6 survived?)</p>
+</blockquote>
+<hr />
+<h2>3. Linear regression</h2>
+<p><strong>In plain words:</strong> Draw the straight line that passes as close as possible to all your dots. To predict, find your spot on the line.</p>
+<p><strong>In real terms:</strong> Linear regression models the target as a weighted sum of features plus a starting value:</p>
+<p><code>y = b0 + b1*x</code></p>
+<ul>
+<li><strong>Intercept (b0):</strong> where the line crosses the y axis, the prediction when every feature is 0.</li>
+<li><strong>Slope or coefficient (b1):</strong> how much y changes when x goes up by 1.</li>
+</ul>
+<p>The algorithm picks the b values that make the total error as small as possible.</p>
+<p><strong>Tie to your midterm:</strong> You never fit a model in the midterm, you prepared data for one. But you scaled <code>age</code>, <code>avg_glucose_level</code>, and <code>bmi</code> with StandardScaler. That matters here: when features are on the same scale, their coefficients are easier to compare.</p>
+<hr />
+<h2>4. How the best fit line is found</h2>
+<p><strong>In plain words:</strong> Start with a guess line. See how wrong it is. Nudge it to be a little less wrong. Repeat until nudging stops helping.</p>
+<p><strong>In real terms:</strong> The slides show five steps:</p>
+<pre class="mermaid">flowchart LR
+    A[1. Initialize<br/>random b0, b1] --> B[2. Predict<br/>every training row]
+    B --> C[3. Measure error<br/>predicted vs actual]
+    C --> D[4. Adjust<br/>gradient descent]
+    D --> E{5. Error still<br/>dropping?}
+    E -->|Yes| B
+    E -->|No| F[Converged: done]
+</pre>
+<p><strong>Ordinary Least Squares (OLS)</strong> is the math that minimizes the Sum of Squared Errors. Good to know: scikit learn's <code>LinearRegression</code> actually solves OLS directly with algebra instead of looping, but the goal (smallest squared error) is identical. Gradient descent is the looping version, and it is how logistic regression gets trained.</p>
+<p><strong>Tie to your midterm:</strong> This is why you only learned the bmi median (28.1) and the scaler settings from the 3,577 training rows. The model also only "learns" from training rows. The 1,533 test rows are for checking, never for adjusting.</p>
+<hr />
+<h2>5. Mean Squared Error (MSE)</h2>
+<p><strong>In plain words:</strong> For each guess, find how far off you were, square it, then average all of those. Big misses count way more than small misses.</p>
+<p><strong>In real terms:</strong> <code>MSE = average of (predicted minus actual) squared</code></p>
+<p>The slides give three reasons for squaring:</p>
+<ol>
+<li><strong>No cancellation:</strong> a miss of minus 5 and plus 5 both become 25, so they cannot cancel to zero.</li>
+<li><strong>Heavy penalty:</strong> being off by 10 costs 100, being off by 1 costs 1. Big errors are punished hard.</li>
+<li><strong>Math friendly:</strong> the square curve is smooth, so the algorithm can find its lowest point easily.</li>
+</ol>
+<p><strong>RMSE</strong> is the square root of MSE. It puts the error back in the original units (dollars, for Fare), which is easier to explain.</p>
+<p><strong>Tie to your midterm:</strong> Your bmi column had an extreme value of 97.6. That is exactly the kind of outlier that MSE punishes heavily and that can drag a regression line. The same reason you used the median (not the mean) to fill bmi blanks applies here: extreme values have outsized pull.</p>
+<blockquote>
+<p><strong>Guiding question:</strong> Titanic fares include a few very expensive tickets. What would that do to MSE? Do you expect your fare model to be very accurate with only Age and Pclass?</p>
+</blockquote>
+<hr />
+<h2>6. Multiple linear regression</h2>
+<p><strong>In plain words:</strong> Real answers depend on more than one thing. Give each input its own slope and add them up.</p>
+<p><strong>In real terms:</strong> <code>y = b0 + b1*x1 + b2*x2 + ... + bn*xn</code>. In the lab, Fare is predicted from two features, <code>Age</code> and <code>Pclass</code>, so the model learns two coefficients and one intercept.</p>
+<p><strong>Tie to your midterm:</strong> After one hot encoding, your stroke data had many feature columns. Each would get its own coefficient in a linear model.</p>
+<hr />
+<h2>7. Reading coefficients (what the numbers mean)</h2>
+<p><strong>In plain words:</strong> A coefficient tells you which way a feature pushes the answer and how hard.</p>
+<p><strong>In real terms:</strong></p>
+<ul>
+<li><strong>Positive coefficient:</strong> feature goes up, prediction goes up. (Slides: each extra square foot adds $150.)</li>
+<li><strong>Negative coefficient:</strong> feature goes up, prediction goes down. (Slides: each extra year of house age drops price by $2,000.)</li>
+<li><strong>Bigger absolute size = stronger influence</strong>, but only fairly comparable when features are on similar scales.</li>
+</ul>
+<p><code>.coef_</code> in scikit learn holds these numbers, in the same order as your feature list. <code>.intercept_</code> holds b0.</p>
+<p><strong>Tie to your midterm:</strong> Watch the scale trap. <code>Pclass</code> is 1, 2, or 3. <code>Age</code> runs from under 1 to 80. A coefficient on Pclass means "per one class step," while Age means "per one year." That is why you standardized age, glucose, and bmi in the midterm: so one unit means the same thing for each.</p>
+<blockquote>
+<p><strong>Guiding question for knowledge check 2:</strong> Pclass 1 is first class (the most expensive) and Pclass 3 is third class. If fares are higher in first class, which sign would you expect on the Pclass coefficient? Print it and see if your guess holds. Write what you actually see, not what you expected.</p>
+</blockquote>
+<hr />
+<h2>8. Four assumptions of linear regression</h2>
+<p><strong>In plain words:</strong> Linear regression works best when the world plays fair in four ways.</p>
+<p><strong>In real terms:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Assumption</th>
+<th>Plain meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Linearity</td>
+<td>The real relationship is roughly a straight line, not a curve.</td>
+</tr>
+<tr>
+<td>Independence</td>
+<td>Rows do not secretly depend on each other (like days in a time series).</td>
+</tr>
+<tr>
+<td>Homoscedasticity</td>
+<td>The spread of errors stays about the same along the whole line.</td>
+</tr>
+<tr>
+<td>Normality</td>
+<td>The errors (residuals) form a bell curve.</td>
+</tr>
+</tbody>
+</table>
+<p>If these break, predictions get unreliable and you should consider other models.</p>
+<p><strong>Tie to your midterm:</strong> You checked distribution shapes (skew) in the midterm. That same habit, looking at the shape before trusting a model, is what these assumptions ask for.</p>
+<hr />
+<h2>9. When linear regression fails</h2>
+<p><strong>In plain words:</strong> Three things trip it up: curves, outliers, and inputs that copy each other.</p>
+<p><strong>In real terms:</strong></p>
+<ul>
+<li><strong>Non linearity:</strong> a straight line fit to a curve <strong>underfits</strong> ("square peg in a round hole").</li>
+<li><strong>Outliers:</strong> because MSE squares errors, one extreme point can pull the whole line ("one bad apple").</li>
+<li><strong>Multicollinearity:</strong> two features carrying the same information confuse the model about who gets credit ("two people shouting the same answer").</li>
+</ul>
+<p><strong>Tie to your midterm:</strong> One hot encoding can create multicollinearity if you keep every category column (the dummy variable trap). Ask yourself whether you used <code>drop_first</code> and why.</p>
+<hr />
+<h2>10. Why linear regression fails for classification</h2>
+<p><strong>In plain words:</strong> A straight line keeps going forever, so it can predict 150% or minus 20% chance. Those make no sense.</p>
+<p><strong>In real terms:</strong> For a 0 or 1 target, linear output is unbounded (minus infinity to plus infinity) and very sensitive to outliers, which shifts the cutoff and causes wrong labels. The fix: squash the output into the range 0 to 1.</p>
+<p><strong>Tie to your midterm:</strong> If you ran a straight line on <code>stroke</code>, you would get predictions like 0.03 or minus 0.1 or 1.2, the same "in between value" problem you saw when SMOTE blended stroke into values like 0.4. A 0 or 1 column should not be treated as a smooth number. That was the core of Prof Rao's SMOTE feedback.</p>
+<hr />
+<h2>11. The sigmoid function</h2>
+<p><strong>In plain words:</strong> A squeezing machine. Put in any number, big or small, and out comes something between 0 and 1 that you can read as a chance.</p>
+<p><strong>In real terms:</strong> <code>sigmoid(z) = 1 / (1 + e^(minus z))</code></p>
+<ul>
+<li>Very negative z gives close to 0. Very positive z gives close to 1.</li>
+<li>At z = 0 the output is exactly 0.5.</li>
+<li>The output is read as the probability of the positive class (class 1).</li>
+</ul>
+<pre><code>probability
+1.0 |                 ________
+    |              /
+0.5 |-----------*-----------   &lt;- z = 0
+    |        /
+0.0 |_______/
+      negative   0   positive   (z)
+</code></pre>
+<p><strong>Tie to your midterm:</strong> For a stroke model, the sigmoid output would be "this patient's estimated chance of stroke."</p>
+<hr />
+<h2>12. Logistic regression (a classifier, despite the name)</h2>
+<p><strong>In plain words:</strong> Do a linear regression, then pass the answer through the sigmoid squeezer so it becomes a probability. Then pick yes or no.</p>
+<p><strong>In real terms:</strong> Training follows four repeated steps:</p>
+<pre class="mermaid">flowchart LR
+    A[1. Linear combo<br/>z = b0 + b1 x] --> B[2. Sigmoid<br/>p = sigmoid z]
+    B --> C[3. Log Loss<br/>compare p to label]
+    C --> D[4. Gradient descent<br/>update the b values]
+    D --> A
+</pre>
+<p>It is called "regression" because step 1 is a regression. It is used for <strong>classification</strong> because the final output is a class.</p>
+<p><strong>Tie to your midterm:</strong> This is the natural first model for your stroke data: binary target, interpretable coefficients.</p>
+<hr />
+<h2>13. Log Loss (binary cross entropy)</h2>
+<p><strong>In plain words:</strong> A scoring rule that punishes you a lot for being confident and wrong.</p>
+<p><strong>In real terms:</strong> <code>Loss = minus [ y * log(p) + (1 minus y) * log(1 minus p) ]</code>, where y is the real label and p is the predicted probability. Slide example, when the true answer is 1:</p>
+<table>
+<thead>
+<tr>
+<th>Prediction p</th>
+<th>Loss</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.95 (confident and right)</td>
+<td>0.05</td>
+</tr>
+<tr>
+<td>0.50 (unsure)</td>
+<td>0.69</td>
+</tr>
+<tr>
+<td>0.01 (confident and wrong)</td>
+<td>4.60</td>
+</tr>
+</tbody>
+</table>
+<p>MSE measures distance. Log Loss measures how good your probabilities are. That is why classification uses Log Loss for training.</p>
+<hr />
+<h2>14. Decision threshold</h2>
+<p><strong>In plain words:</strong> The probability line where you switch from "no" to "yes." The default is 0.5, but you can move it.</p>
+<p><strong>In real terms:</strong></p>
+<ul>
+<li><strong>High threshold (like 0.9):</strong> only say yes when very sure. Fewer false positives. Spam filters do this so real email is not deleted.</li>
+<li><strong>Low threshold (like 0.1):</strong> say yes at a small chance. Fewer false negatives. Cancer screening does this so nothing suspicious is missed.</li>
+</ul>
+<p><strong>Tie to your midterm:</strong> With only 4.7% stroke cases, a model at threshold 0.5 may almost never say "stroke." In a medical setting you would usually lower the threshold, because missing a real stroke is worse than an extra checkup.</p>
+<hr />
+<h2>15. Accuracy, and why it can lie</h2>
+<p><strong>In plain words:</strong> Accuracy is the share of guesses that were right. It sounds perfect, but it can fool you when one answer is rare.</p>
+<p><strong>In real terms:</strong> <code>accuracy = correct predictions / all predictions</code>. It works for the Titanic survival task, where classes are not extremely lopsided. It is a classification metric only: for a continuous target like Fare, a prediction is almost never exactly right to the cent, so "percent exactly right" would be near zero and meaningless. That is why regression uses MSE.</p>
+<p><strong>Tie to your midterm (big lesson):</strong> Stroke was positive in only <strong>4.7%</strong> of training rows. A lazy model that always says "no stroke" gets about <strong>95% accuracy</strong> while catching <strong>zero</strong> strokes. That is what the professor meant: imbalance matters for classification metrics, and accuracy is misleading at 4.7%. You will meet better metrics (precision, recall, confusion matrix) in Lab 07 Model Evaluation.</p>
+<blockquote>
+<p><strong>Guiding question for knowledge check 3:</strong> Why is accuracy fine for Survived but wrong for Fare? And when would accuracy be wrong even for a classification task?</p>
+</blockquote>
+<hr />
+<h2>16. Beyond two classes: One vs Rest and Softmax</h2>
+<p><strong>In plain words:</strong> For more than two buckets, either run one yes or no model per bucket and pick the most confident, or use one model that splits 100% across all buckets.</p>
+<p><strong>In real terms:</strong></p>
+<ul>
+<li><strong>One vs Rest (OvR):</strong> train N binary classifiers ("Is it a cat?", "Is it a dog?"). Pick the highest score.</li>
+<li><strong>Softmax:</strong> a generalized sigmoid. It turns raw scores into probabilities that add up to exactly 1.</li>
+</ul>
+<p>Slide example: scores 2.0, 1.0, 0.1 become e^z = 7.39, 2.72, 1.10 (sum 11.21), then divide each by the sum: <strong>0.66, 0.24, 0.10</strong>.</p>
+<p><strong>Tie to your midterm:</strong> <code>work_type</code> has five categories. Predicting work_type would be a multi class problem needing OvR or Softmax.</p>
+<hr />
+<h2>17. Overfitting and regularization</h2>
+<p><strong>In plain words:</strong> Overfitting is memorizing the answers instead of learning the lesson. Regularization is a rule that says "keep it simple or lose points."</p>
+<p><strong>In real terms:</strong> An overfit model fits the training data's noise and then does badly on new data. Regularization adds a penalty for big coefficients, forcing simpler, more general patterns.</p>
+<p><strong>Tie to your midterm:</strong> This is why you held out 30% as a test set (seed 33, 3,577 train and 1,533 test). Only the test set can reveal overfitting. This also leads straight into Lab 08 (bias and variance).</p>
+<hr />
+<h2>18. Ridge (L2)</h2>
+<p><strong>In plain words:</strong> A rubber band pulls every coefficient toward zero. They shrink but almost never hit zero.</p>
+<p><strong>In real terms:</strong> <code>Loss = MSE + lambda * sum of (b squared)</code>. Lambda sets the penalty strength. Ridge keeps all features with reduced impact. Good when most features are useful or when features are correlated.</p>
+<h2>19. Lasso (L1)</h2>
+<p><strong>In plain words:</strong> A stricter rule that can push weak coefficients all the way to zero, which deletes those features.</p>
+<p><strong>In real terms:</strong> <code>Penalty = lambda * sum of |b|</code>. Creates sparse models and does automatic feature selection. Slide example: noise features like <code>User_ID</code> and <code>Random</code> go to exactly 0.0.</p>
+<h2>20. Elastic Net</h2>
+<p><strong>In plain words:</strong> Ridge and Lasso mixed together.</p>
+<p><strong>In real terms:</strong> Combines L1 selection with L2 stability. When two features are near copies (height in cm and inches), Lasso drops one at random, while Elastic Net groups them. <code>l1_ratio</code> 0 is pure Ridge, 1 is pure Lasso, 0.5 is a mix.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Ridge (L2)</th>
+<th>Lasso (L1)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Penalty</td>
+<td>squared size</td>
+<td>absolute size</td>
+</tr>
+<tr>
+<td>Effect</td>
+<td>shrinks near zero</td>
+<td>shrinks to exactly zero</td>
+</tr>
+<tr>
+<td>Picks features?</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Use when</td>
+<td>most features matter, or correlated</td>
+<td>many features are useless</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Tie to your midterm:</strong> Regularization penalizes coefficient size, so it only works fairly when features share a scale. That is another reason scaling (StandardScaler on age, glucose, bmi) comes before these models. Prof Rao's feedback also asked that the scaler you <strong>use in the final file</strong> be the one you explain, not one you only demonstrated (you showed MinMax but kept Standard).</p>
+<hr />
+<h2>21. Polynomial regression</h2>
+<p><strong>In plain words:</strong> To fit a curve with a straight line tool, add a new column that is x squared. The model just sees another column.</p>
+<p><strong>In real terms:</strong> <code>y = b0 + b1*x + b2*x^2</code>. You change the data, not the model. High degrees (x^3, x^10) get wiggly and overfit.</p>
+<hr />
+<h2>22. Choosing a model (the slide's decision map)</h2>
+<pre class="mermaid">flowchart TD
+    T{Target?} -->|Continuous number| LR[Linear Regression: baseline]
+    LR -->|Overfitting or many features| RL[Ridge / Lasso]
+    LR -->|Curved data| PF[Polynomial features]
+    T -->|Category| LG[Logistic Regression: baseline]
+    LG -->|More than 2 classes| SM[Softmax / OvR]
+    LG -->|Complex boundary| NL[Trees, SVMs: Module 09]
+</pre>
+<hr />
+<h2>Lessons carried over from your midterm feedback</h2>
+<table>
+<thead>
+<tr>
+<th>Feedback</th>
+<th>What it means for Lab 06</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Stroke should be the target for classification</td>
+<td>Always name your target first and decide: regression or classification?</td>
+</tr>
+<tr>
+<td>Keep the target out of SMOTE</td>
+<td>Never let any tool blend or scale the answer column. Treat a 0 or 1 target as a label.</td>
+</tr>
+<tr>
+<td>Imbalance matters for classification metrics</td>
+<td>Accuracy at 4.7% positive is misleading. Note class balance before trusting accuracy.</td>
+</tr>
+<tr>
+<td>Explain the scaler you actually use in the final file</td>
+<td>Whatever preprocessing you choose, use it and explain it. Do not demo one and ship another.</td>
+</tr>
+</tbody>
+</table>
+<h2>Things to notice in this notebook (not answers, just heads ups)</h2>
+<ul>
+<li>The Task 1 starter comment uses <code>np.sqrt</code> but <code>numpy</code> is never imported. You will see an error if you uncomment it as is. Think about what fixes it.</li>
+<li>The same comment already claims "off by about $48." That is the notebook author's number, not yours. Report what <strong>your</strong> run prints.</li>
+<li>The Part 3 setup cell maps <code>Sex</code> to 0 and 1. If you run that cell twice, the column becomes all blank (NaN), because "male" no longer exists the second time. If things break, use Restart and Run All.</li>
+<li>The notebook drops rows with missing Age. In your midterm you filled bmi with a median plus a flag. Both are valid choices; worth a thought for your reflection.</li>
+<li>The slides mention building logistic regression "from scratch" and comparing it with linear regression "to see it fail," but this notebook uses scikit learn for both. Do what the notebook asks; the slides explain why.</li>
+</ul>
+<hr />
+<h2>Vocabulary cheat sheet</h2>
+<table>
+<thead>
+<tr>
+<th>Word</th>
+<th>Short meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Feature (X)</td>
+<td>an input column</td>
+</tr>
+<tr>
+<td>Target (y)</td>
+<td>the answer column</td>
+</tr>
+<tr>
+<td>Coefficient</td>
+<td>a learned slope for one feature</td>
+</tr>
+<tr>
+<td>Intercept</td>
+<td>the starting value when all features are 0</td>
+</tr>
+<tr>
+<td>Residual</td>
+<td>actual minus predicted</td>
+</tr>
+<tr>
+<td>MSE / RMSE</td>
+<td>average squared error / its square root in real units</td>
+</tr>
+<tr>
+<td>Sigmoid</td>
+<td>squeezes any number into 0 to 1</td>
+</tr>
+<tr>
+<td>Log Loss</td>
+<td>scoring rule for probabilities</td>
+</tr>
+<tr>
+<td>Threshold</td>
+<td>the cutoff probability for saying "yes"</td>
+</tr>
+<tr>
+<td>Overfitting</td>
+<td>memorizing noise</td>
+</tr>
+<tr>
+<td>Regularization</td>
+<td>penalty that keeps a model simple</td>
+</tr>
+</tbody>
+</table></body></html>

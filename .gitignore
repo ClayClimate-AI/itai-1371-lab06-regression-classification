@@ -1,0 +1,63 @@
+# ---- ITAI 1371 Lab 06 .gitignore ----
+# Goal: ignore the environment, caches, and OS junk.
+# KEEP the deliverables tracked: notebooks (.ipynb), PDFs, journals, and docs.
+
+# --- Virtual environments ---
+.venv/
+venv/
+env/
+ENV/
+
+# --- Python caches / build artifacts ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.pip-cache/
+
+# --- Jupyter / IPython ---
+.ipynb_checkpoints/
+profile_default/
+ipython_config.py
+
+# --- Testing / coverage caches ---
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# --- macOS junk ---
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# --- Windows / Linux junk ---
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+*~
+
+# --- Editor / IDE ---
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# --- Local secrets / env files (safety) ---
+.env
+.env.*
+*.local
+
+# ---- Explicitly KEEP deliverables (negated so they are never ignored) ----
+!*.ipynb
+!*.pdf
+!*.md
+!*.html
+!templates/
