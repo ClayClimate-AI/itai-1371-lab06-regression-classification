@@ -114,7 +114,7 @@ The slides give three reasons for squaring:
 2. **Heavy penalty:** being off by 10 costs 100, being off by 1 costs 1. Big errors are punished hard.
 3. **Math friendly:** the square curve is smooth, so the algorithm can find its lowest point easily.
 
-**RMSE** is the square root of MSE. It puts the error back in the original units (dollars, for Fare), which is easier to explain.
+**RMSE** is the square root of MSE. It puts the error back in the original units (1912 British pounds, for Fare), which is easier to explain.
 
 **Tie to your midterm:** Your bmi column had an extreme value of 97.6. That is exactly the kind of outlier that MSE punishes heavily and that can drag a regression line. The same reason you used the median (not the mean) to fill bmi blanks applies here: extreme values have outsized pull.
 
