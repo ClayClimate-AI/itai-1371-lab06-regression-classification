@@ -17,7 +17,7 @@ Suggested order: read BRIEF sections 1 to 7, do Task 1, read sections 10 to 15, 
 
 ## Status (Oct 14, 2026)
 
-Done and pushed. Only the Canvas text entry is left.
+Complete. Pushed and submitted on Canvas.
 
 | Deliverable | File |
 |---|---|

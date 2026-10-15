@@ -4,7 +4,7 @@ Source: the Canvas page "Lab 06 Regression and Classification" (due Wednesday by
 
 Tick each box only when it is truly done.
 
-**Status (Oct 14, 2026):** all work done, committed, and pushed. Only the Canvas text entry is left.
+**Status (Oct 14, 2026):** complete. All work pushed and submitted on Canvas.
 
 ## Rubric (100 points)
 
@@ -36,7 +36,7 @@ Tick each box only when it is truly done.
 | Reflective journal, 1 to 2 pages | `L06Journal_R_JosephClay_ITAI1371.pdf` (2 pages) | [x] |
 | Contribution journal, 1 to 2 pages | `L06Journal_C_JosephClay_ITAI1371.pdf` (2 pages) | [x] |
 | All code and documents pushed to the GitHub repo | https://github.com/ClayClimate-AI/itai-1371-lab06-regression-classification | [x] |
-| Canvas text entry submitted (likely your GitHub link; confirm) | Canvas | [ ] |
+| Canvas text entry submitted (GitHub repo link) | Canvas | [x] |
 
 Note: the page literally shows `L03_...` and `L03Journal_R_...` (copied from an older lab), so L06 was used instead. Files use the real name (JosephClay) to match the self check's "with your real name."
 
